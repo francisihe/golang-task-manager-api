@@ -47,7 +47,10 @@ func main() {
 	log.Println("Database connected successfully")
 
 	// Perform auto-migration to create/update tables based on the models
-	db.AutoMigrate(&models.Task{})
+	err = db.AutoMigrate(&models.Task{})
+	if err != nil {
+		log.Fatalf("Error during migration: %v", err)
+	}
 
 	// Set the database instance globally -- Instantiated in the models package
 	models.DB = db
