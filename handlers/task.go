@@ -2,18 +2,22 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
-	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/francisihe/golang-task-manager-api/models"
+	"github.com/google/uuid"
 )
 
-// Helper function to generate a random task ID
+// Helper function to generate a new UUID for the task ID
 func generateID() string {
-	return fmt.Sprintf("%d", rand.Intn(100000))
+	return uuid.New().String()
 }
+
+// // Helper function to generate a random task ID
+// func generateID() string {
+// 	return fmt.Sprintf("%d", rand.Intn(100000))
+// }
 
 // TaskHandler handles the requests related to tasks
 func TaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +47,12 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	var newTask models.Task
 	if err := json.NewDecoder(r.Body).Decode(&newTask); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Validate input
+	if newTask.Title == "" || newTask.Description == "" {
+		http.Error(w, "Title and Description cannot be empty", http.StatusBadRequest)
 		return
 	}
 
@@ -87,6 +97,12 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	var task models.Task
 	if err := models.DB.First(&task, "id = ?", updatedTask.ID).Error; err != nil {
 		http.Error(w, "Task not found", http.StatusNotFound)
+		return
+	}
+
+	// Validate input
+	if updatedTask.Title == "" || updatedTask.Description == "" {
+		http.Error(w, "Title and Description cannot be empty", http.StatusBadRequest)
 		return
 	}
 
