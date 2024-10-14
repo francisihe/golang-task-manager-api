@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/francisihe/golang-task-manager-api/models"
@@ -71,18 +73,74 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newTask)
 }
 
-// GetTasks retrieves all tasks from the database using GORM
 func GetTasks(w http.ResponseWriter, r *http.Request) {
 	var tasks []models.Task
+	var totalTasks int64
 
-	// Fetch tasks from the database
-	if err := models.DB.Find(&tasks).Error; err != nil {
+	// Pagination parameters
+	page := r.URL.Query().Get("page")
+	limit := r.URL.Query().Get("limit")
+	status := r.URL.Query().Get("status") // Example filter by status
+
+	// Default pagination values
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	// Convert page and limit to integers
+	pageInt, err := strconv.Atoi(page)
+	if err != nil || pageInt <= 0 {
+		http.Error(w, "Invalid page number", http.StatusBadRequest)
+		return
+	}
+
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil || limitInt <= 0 {
+		http.Error(w, "Invalid limit number", http.StatusBadRequest)
+		return
+	}
+
+	// Calculate offset for pagination
+	offset := (pageInt - 1) * limitInt
+
+	// Start building the query
+	query := models.DB.Model(&models.Task{})
+
+	// Apply filtering by status if provided
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	// Count the total number of tasks after filtering
+	if err := query.Count(&totalTasks).Error; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Fetch tasks with pagination and filtering
+	if err := query.Offset(offset).Limit(limitInt).Find(&tasks).Error; err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Response header and pagination metadata
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tasks)
+	w.Header().Set("X-Total-Count", fmt.Sprintf("%d", totalTasks))
+	w.Header().Set("X-Page", page)
+	w.Header().Set("X-Limit", limit)
+
+	// Return tasks and pagination metadata
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"tasks": tasks,
+		"pagination": map[string]interface{}{
+			"total": totalTasks,
+			"page":  pageInt,
+			"limit": limitInt,
+		},
+	})
 }
 
 // UpdateTask handles updating an existing task with GORM
