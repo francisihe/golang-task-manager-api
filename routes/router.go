@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/francisihe/golang-task-manager-api/handlers"
+	middleware "github.com/francisihe/golang-task-manager-api/middlewares"
 )
 
 // SetupRouter sets up the routes for the API
@@ -12,6 +13,11 @@ func SetupRouter() *http.ServeMux {
 
 	// Define the routes
 	mux.HandleFunc("/api/tasks", handlers.TaskHandler) // Handle tasks CRUD
+
+	mux.HandleFunc("/api/login", handlers.Login) // Login for generating JWT
+
+	// Apply JWT authentication middleware to task-related routes
+	mux.Handle("/api/tasks/", middleware.AuthMiddleware(http.StripPrefix("/api", mux)))
 
 	// Alternatively, I could define the routes individually like so:
 	// mux.HandleFunc("/api/tasks/create", handlers.CreateTask)
