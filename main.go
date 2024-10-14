@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	// middleware "github.com/francisihe/golang-task-manager-api/middlewares" -- importing a packaga as 'another name' syntax
 	"github.com/francisihe/golang-task-manager-api/models"
 	"github.com/francisihe/golang-task-manager-api/routes"
 
@@ -59,9 +60,25 @@ func main() {
 	// Initialize the router
 	router := routes.SetupRouter()
 
+	// ==== ROUTING USING GORILLA MUX / MIDDLEWARE APPLICATION ===
+
 	// If i were using the gorilla mux router, it would look like this:
 	// Use the mux router from routes.SetupRouter
 	// http.Handle("/", routes.SetupRouter())
+
+	// And apply the middleware as such:
+	// // Apply rate limiting middleware
+	// http.Handle("/", middleware.RateLimiting(mux))
+
+	// Apply rate limiting middleware to the router using gorilla/mux
+	// // Apply the middleware globally using mux.Use
+	// // Apply CORS handling
+	// router.Use(middleware.CORS)
+
+	// // Apply rate limiting
+	// router.Use(middleware.RateLimiting)
+
+	// ===========================
 
 	// Start the HTTP server
 	log.Println("Server starting on port 8080...")
