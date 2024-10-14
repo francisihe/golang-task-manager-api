@@ -59,6 +59,10 @@ func main() {
 	// Initialize the router
 	router := routes.SetupRouter()
 
+	// If i were using the gorilla mux router, it would look like this:
+	// Use the mux router from routes.SetupRouter
+	// http.Handle("/", routes.SetupRouter())
+
 	// Start the HTTP server
 	log.Println("Server starting on port 8080...")
 	if err := http.ListenAndServe(":8080", router); err != nil {
