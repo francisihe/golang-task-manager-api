@@ -80,8 +80,14 @@ func main() {
 
 	// ===========================
 
+	// Get the port from environment variable or use a default port
+	PORT := os.Getenv("PORT")
+	if PORT == "" {
+		PORT = "8080" // Default port if not set in the environment
+	}
+
 	// Start the HTTP server
-	log.Println("Server starting on port 8080...")
+	log.Printf("Server starting on port %s...\n", PORT)
 	if err := http.ListenAndServe(":8080", router); err != nil {
 		log.Fatal(err)
 	}
